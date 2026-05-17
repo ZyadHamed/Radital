@@ -1,0 +1,6 @@
+@Radital_EG_Server_HostAddress = http://localhost:5120
+
+GET {{Radital_EG_Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

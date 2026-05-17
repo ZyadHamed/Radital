@@ -1,0 +1,6 @@
+@RadiologistAPI_HostAddress = http://localhost:5274
+
+GET {{RadiologistAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
