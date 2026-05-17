@@ -81,11 +81,11 @@ Track real-time status  ←←←  Finalize & notify     ←←←  Submit repor
 
 ## 📸 Screenshots
 
-### Landing Page — Role Selection
+### Login Page — Role Selection
 
-> The entry point routes users to their specialized clinical workspace.
+> The entry point routes users to their specialized clinical workspace. The routing happens based on the login ID whether it starts with TEC or RAD
 
-![Main Page](docs/screenshots/main-page.png)
+![Main Page](Screenshots/LoginPage.png)
 *(See Phase 3/4 Report — UI/UX Designs, Page 15)*
 
 ---
@@ -94,7 +94,8 @@ Track real-time status  ←←←  Finalize & notify     ←←←  Submit repor
 
 > Prioritized case queue with STAT cases pinned at top with red emergency banners. Filter by modality and priority in real time.
 
-![Radiologist Dashboard](docs/screenshots/radiologist-dashboard.png)
+![Radiologist Dashboard](Screenshots/RadiologistWorkload1.png)
+![Radiologist Dashboard](Screenshots/RadiologistWorkload2.png)
 
 **Key features visible:**
 - 🔴 STAT/Emergency cases with red banners and `OPEN CRITICAL STUDY` CTA
@@ -108,7 +109,7 @@ Track real-time status  ←←←  Finalize & notify     ←←←  Submit repor
 
 > Full diagnostic workspace: browser-based DICOM viewer with annotation tools side-by-side with the structured report template.
 
-![DICOM Viewer](docs/screenshots/dicom-viewer.png)
+![DICOM Viewer](Screenshots/RadiologistReportWriting.png)
 
 **Tools available:**
 | Tool | Capability |
@@ -126,7 +127,9 @@ Track real-time status  ←←←  Finalize & notify     ←←←  Submit repor
 
 > Real-time request tracking for hospital technicians with color-coded status badges and workflow progress indicators.
 
-![Staff Dashboard](docs/screenshots/staff-dashboard.png)
+![Staff Dashboard](Screenshots/TechnicianDashboard.png)
+![Staff Dashboard](Screenshots/TechnicianDashboard2.png)
+
 
 **Status colors:** 🟡 Pending → 🔵 In Review → 🟢 Completed
 
@@ -136,8 +139,13 @@ Track real-time status  ←←←  Finalize & notify     ←←←  Submit repor
 
 > Multi-step request form with patient demographics, DICOM upload, modality selection, and Emergency/STAT toggle with mandatory clinical justification.
 
-![Create Request](docs/screenshots/create-request.png)
+![Create Request](Screenshots/ImagingRequest.png)
 
+
+### Report Delivery (B.3 / B.4)
+
+> The final report delivered by the radiologist
+![Create Request](Screenshots/Report.png)
 ---
 
 ## 🏛️ Architecture
