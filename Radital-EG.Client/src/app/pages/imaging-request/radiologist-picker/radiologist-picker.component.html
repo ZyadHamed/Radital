@@ -1,0 +1,162 @@
+<!-- radiologist-picker.component.html -->
+<div class="picker-root">
+
+  <!-- ── Header ──────────────────────────────────────────────────────── -->
+  <div class="picker-header">
+    <div class="picker-title">
+      <span class="picker-icon">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </span>
+      ASSIGN RADIOLOGIST
+    </div>
+    <div class="picker-actions">
+  <button class="toggle-manual" (click)="showManual = !showManual" type="button">
+    {{ showManual ? 'Smart Picker' : 'Manual ID' }}
+  </button>
+      <button class="btn-refresh" (click)="loadScores()" [disabled]="!requestId || isLoading" type="button"
+              title="Reload match scores">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+             [class.spinning]="isLoading">
+          <polyline points="1 4 1 10 7 10"/>
+          <path d="M3.51 15a9 9 0 1 0 .49-3.77"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Manual input — always shown ────────────────────────────────── -->
+  <div class="manual-block">
+    <input
+      class="manual-input"
+      type="text"
+      placeholder="Paste radiologist UUID directly…"
+      [value]="manualId"
+      (input)="manualId = $any($event.target).value; onManualChange()"
+    />
+    <div class="manual-hint" *ngIf="!requestId">
+      Submit the request first to unlock smart matching, or paste a UUID above.
+    </div>
+  </div>
+
+  <!-- ── Smart picker ─────────────────────────────────────────────────── -->
+  <ng-container *ngIf="requestId && !showManual" >
+
+    <!-- Loading -->
+    <div class="picker-loading" *ngIf="isLoading">
+      <div class="pulse-ring"></div>
+      <span>Scoring radiologists…</span>
+    </div>
+
+    <!-- Error -->
+    <div class="picker-error" *ngIf="!isLoading && errorMessage">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      {{ errorMessage }}
+    </div>
+
+    <!-- Cards -->
+    <div class="score-list" *ngIf="!isLoading && !errorMessage && scores.length">
+
+      <div
+        *ngFor="let doc of scores; let i = index"
+        class="score-card"
+        [class.card-selected]="isSelected(doc.radiologistId)"
+        [class.card-top]="i === 0 && !isSelected(doc.radiologistId)"
+        (click)="select(doc.radiologistId)"
+      >
+        <!-- Rank badge -->
+        <div class="rank-badge" [class.rank-gold]="i === 0" [class.rank-silver]="i === 1" [class.rank-bronze]="i === 2">
+          {{ i === 0 ? '★' : '#' + (i + 1) }}
+        </div>
+
+        <!-- Selected check -->
+        <div class="selected-check" *ngIf="isSelected(doc.radiologistId)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+               stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+
+        <!-- Doctor info -->
+        <div class="doc-info">
+            <div class="doc-avatar">{{ getInitials(doc.radiologistName) }}</div>
+            <div class="doc-meta">
+            <span class="doc-name">{{ doc.radiologistName }}</span>
+            <span class="doc-specialty">{{ doc.specialty }}</span>
+          </div>
+        </div>
+
+        <!-- Stats row -->
+        <div class="doc-stats">
+          <div class="stat-chip">
+            <span class="stat-icon">⏱</span>
+            <span>{{ doc.averageTurnaroundHours != null ? (doc.averageTurnaroundHours | number:'1.0-1') + 'h avg' : 'New' }}</span>
+          </div>
+          <div class="stat-chip">
+            <span class="stat-icon">📋</span>
+            <span>{{ doc.currentQueueSize }} active</span>
+          </div>
+        </div>
+
+        <!-- Score bars -->
+        <div class="score-bars">
+          <div class="bar-row">
+            <span class="bar-label">Specialty</span>
+            <div class="bar-track">
+              <div class="bar-fill" [class]="scoreClass(doc.specialtyScore)"
+                   [style.width.%]="scoreBar(doc.specialtyScore)"></div>
+            </div>
+            <span class="bar-val">{{ doc.specialtyScore | number:'1.0-0' }}</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Queue</span>
+            <div class="bar-track">
+              <div class="bar-fill" [class]="scoreClass(doc.queueScore)"
+                   [style.width.%]="scoreBar(doc.queueScore)"></div>
+            </div>
+            <span class="bar-val">{{ doc.queueScore | number:'1.0-0' }}</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Speed</span>
+            <div class="bar-track">
+              <div class="bar-fill" [class]="scoreClass(doc.turnaroundScore)"
+                   [style.width.%]="scoreBar(doc.turnaroundScore)"></div>
+            </div>
+            <span class="bar-val">{{ doc.turnaroundScore | number:'1.0-0' }}</span>
+          </div>
+        </div>
+
+        <!-- Overall score -->
+        <div class="overall-score" [class]="scoreClass(doc.overallScore)">
+          <span class="overall-num">{{ doc.overallScore | number:'1.0-0' }}</span>
+          <span class="overall-label">MATCH</span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Empty -->
+    <div class="picker-empty" *ngIf="!isLoading && !errorMessage && !scores.length">
+      No radiologists found for this request.
+    </div>
+
+  </ng-container>
+
+  <!-- ── Selected summary ─────────────────────────────────────────────── -->
+  <div class="selected-summary" *ngIf="selectedId">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+         stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+    <span>Assigned: <strong>{{ selectedId }}</strong></span>
+  </div>
+
+</div>

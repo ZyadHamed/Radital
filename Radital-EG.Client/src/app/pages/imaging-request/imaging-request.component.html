@@ -1,0 +1,162 @@
+<div class="app-layout">
+
+  <!-- Top Bar -->
+  <header class="top-navbar">
+    <h1 class="logo">RADITAL STUDIO</h1>
+    <div class="nav-actions">
+      <button class="btn-secondary" (click)="goToDashboard()">Dashboard</button>
+    </div>
+    <div class="top-buttons">
+      <!-- Top bar buttons -->
+      <button class="btn-danger"   (click)="deleteRequest()">Delete</button>
+      <button class="btn-primary"  (click)="submitRequest()" [disabled]="isLoading">
+        {{ isLoading ? (isEditMode ? 'Updating...' : 'Submitting...') : (isEditMode ? 'Update Request' : 'Submit Request') }}
+      </button>
+    </div>
+  </header>
+
+  <!-- Error / Success banner -->
+  <div class="banner banner-error" *ngIf="errorMessage">{{ errorMessage }}</div>
+  <div class="banner banner-success" *ngIf="successMessage">{{ successMessage }}</div>
+
+  <!-- Main -->
+  <div class="workspace">
+
+    <!-- LEFT — Patient & Clinical Info -->
+    <div class="form-section">
+      <h2 class="title">{{ isEditMode ? 'Edit Imaging Request' : 'New Imaging Request' }}</h2>
+
+      <!-- Patient Info -->
+      <div class="form-card">
+        <h3 class="card-heading">Patient Information</h3>
+
+        <label>Patient Name *</label>
+        <input [(ngModel)]="model.patientName" placeholder="Full name" />
+
+        <label>Date of Birth *</label>
+        <input type="date" [(ngModel)]="model.patientDateOfBirth" [max]="today" />
+
+        <label>Gender *</label>
+        <select [(ngModel)]="model.gender">
+          <option value="">Select</option>
+          <option>Male</option>
+          <option>Female</option>
+        </select>
+
+        <label>Phone Number *</label>
+        <input [(ngModel)]="model.patientPhoneNumber" placeholder="+20 1xx xxx xxxx" />
+
+        <label>Address *</label>
+        <input [(ngModel)]="model.patientAddress" placeholder="Street, City" />
+
+        <label>Medical History *</label>
+        <textarea [(ngModel)]="model.patientMedicalHistory" placeholder="Relevant past conditions, surgeries, medications..."></textarea>
+
+        <label>Patient Notes</label>
+        <textarea [(ngModel)]="model.patientNotes" placeholder="Optional additional notes"></textarea>
+      </div>
+
+      <!-- Request Details -->
+      <div class="form-card">
+        <h3 class="card-heading">Request Details</h3>
+
+        <label>Scan Type *</label>
+        <select [(ngModel)]="model.scanType">
+          <option value="">Select</option>
+          <option>CT</option>
+          <option>MRI</option>
+          <option>X-Ray</option>
+          <option>Ultrasound</option>
+        </select>
+
+        <label>Suggested Department *</label>
+        <select [(ngModel)]="model.suggestedDepartment">
+          <option value="">Select</option>
+          <option>Neurology</option>
+          <option>Oncology</option>
+          <option>Orthopedics</option>
+          <option>Chest</option>
+          <option>Cardiology</option>
+          <option>Emergency</option>
+          <option>Other</option>
+        </select>
+
+        <label>Priority *</label>
+        <select [(ngModel)]="model.priority">
+          <option value="">Select</option>
+          <option>Routine</option>
+          <option>Urgent</option>
+          <option>STAT</option>
+          <option>Emergency</option>
+        </select>
+
+        <label>Due Date *</label>
+        <input type="datetime-local" [(ngModel)]="model.dueDate" />
+
+        <label>Assigned Radiologist *</label>
+        <app-radiologist-picker
+          [requestId]="lastCreated?.id ?? editingId"
+          [(selectedId)]="model.assignedRadiologistId">
+        </app-radiologist-picker>
+
+        <label>Clinical Notes</label>
+        <textarea [(ngModel)]="model.notes" placeholder="Reason for scan, clinical findings..."></textarea>
+      </div>
+
+      <!-- Emergency -->
+      <div class="form-card">
+        <h3 class="card-heading">Emergency</h3>
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="isEmergency" [(ngModel)]="model.isEmergency" />
+          <label for="isEmergency">Mark as Emergency</label>
+        </div>
+
+        <ng-container *ngIf="model.isEmergency">
+          <label>Emergency Justification *</label>
+          <textarea [(ngModel)]="model.emergencyJustification" placeholder="Explain why this is an emergency..."></textarea>
+        </ng-container>
+      </div>
+
+      <div class="actions">
+        <button class="btn-secondary" (click)="reset()">Reset</button>
+      </div>
+    </div>
+
+    <!-- RIGHT — Preview & Image -->
+    <div class="preview-section">
+
+      <div class="preview-card">
+        <h3>Request Preview</h3>
+        <p><b>Name:</b> {{ model.patientName || '—' }}</p>
+        <p><b>DOB:</b> {{ model.patientDateOfBirth || '—' }}</p>
+        <p><b>Gender:</b> {{ model.gender || '—' }}</p>
+        <p><b>Phone:</b> {{ model.patientPhoneNumber || '—' }}</p>
+        <p><b>Scan:</b> {{ model.scanType || '—' }}</p>
+        <p><b>Department:</b> {{ model.suggestedDepartment || '—' }}</p>
+        <p><b>Priority:</b> {{ model.priority || '—' }}</p>
+        <p><b>Due:</b> {{ model.dueDate || '—' }}</p>
+        <p><b>Emergency:</b> {{ model.isEmergency ? 'Yes' : 'No' }}</p>
+        <p><b>Notes:</b> {{ model.notes || '—' }}</p>
+      </div>
+
+      <div class="preview-card upload-card">
+        <h3>Scan Image</h3>
+
+        <div style="display: flex; gap: 8px; flex-direction: column;">
+          <input
+            type="text"
+            placeholder="Image storage URL / reference"
+            [(ngModel)]="model.imageUrl"
+          />
+          <button class="btn-secondary" (click)="loadImage()">Load Image</button>
+        </div>
+
+        <div class="image-box" *ngIf="previewImageUrl">
+          <img [src]="previewImageUrl" alt="Scan preview" />
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

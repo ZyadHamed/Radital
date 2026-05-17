@@ -1,0 +1,149 @@
+/* BASE */
+.app-layout {
+  font-family: 'Segoe UI', Arial;
+  background: #f8f9fb;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* TOP BAR (same style as reporting system) */
+.top-navbar {
+  background: #fff;
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.logo {
+  color: #1a56db;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+/* buttons container */
+.top-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+/* MAIN LAYOUT */
+.workspace {
+  display: flex;
+  flex: 1;
+  padding: 24px;
+  gap: 20px;
+}
+
+/* FORM */
+.form-section {
+  flex: 2;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 12px;
+}
+
+.form-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  display: grid;
+  gap: 10px;
+}
+
+label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #374151;
+}
+
+input, select, textarea {
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  outline: none;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: #1a56db;
+}
+
+/* PREVIEW */
+.preview-section {
+  flex: 1;
+}
+
+.preview-card {
+  background: #fff;
+  border-radius: 12px;
+  border-left: 4px solid #1a56db;
+  padding: 20px;
+}
+
+/* BUTTONS (UNIFIED STYLE) */
+.btn-primary {
+  background: #1a56db;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-secondary {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #374151;
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* bottom actions */
+.actions {
+  margin-top: 15px;
+}
+
+.preview-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px; 
+}
+
+.upload-card {
+  margin-top: 0;
+  background: #fff;
+  border-radius: 12px;
+  border-left: 4px solid #1a56db;
+  padding: 20px;
+}
+
+.upload-card input {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 8px;
+}
+
+.upload-card button {
+  width: 100%;
+}

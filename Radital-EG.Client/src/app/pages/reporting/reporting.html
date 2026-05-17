@@ -1,0 +1,538 @@
+<div class="app-layout">
+
+  <!-- ── Top Navbar ─────────────────────────────────────── -->
+  <header class="top-navbar">
+    <div class="nav-left">
+      <h1 class="logo">Radital Studio</h1>
+      <span class="nav-link" (click)="goToCaseList()" style="cursor:pointer;">Case List</span>
+      <span class="nav-link active">Worklist</span>
+    </div>
+    <div class="nav-center">
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input type="text" placeholder="Search Patient...">
+      </div>
+    </div>
+    <div class="nav-right">
+      <button
+        class="btn-secondary"
+        *ngIf="reportId"
+        (click)="downloadPdf()"
+      >
+        ↓ DOWNLOAD PDF
+      </button>
+      <button
+        class="sign-report-btn"
+        (click)="submitReport()"
+        [disabled]="isSubmitting || isLoading"
+      >
+        {{ isSubmitting ? 'SUBMITTING...' : 'SIGN REPORT' }}
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Urgent Banner ──────────────────────────────────── -->
+  <div class="urgent-banner" *ngIf="bannerVisible && currentCase?.isEmergency">
+    <div class="banner-content">
+      <span class="warning-icon">!</span>
+      <span class="banner-text">
+        URGENT: EMERGENCY CASE — {{ currentCase?.patientName }}
+        <span *ngIf="currentCase?.emergencyJustification">
+          · {{ currentCase?.emergencyJustification }}
+        </span>
+      </span>
+    </div>
+    <button class="confirm-btn" (click)="confirmReceipt()">CONFIRM RECEIPT</button>
+  </div>
+
+  <!-- ── Error Banner ───────────────────────────────────── -->
+  <div class="error-banner" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <!-- ── Loading ────────────────────────────────────────── -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="loading-spinner"></div>
+    <p>Loading case...</p>
+  </div>
+
+  <!-- ── Workspace ──────────────────────────────────────── -->
+  <div class="workspace-container" *ngIf="!isLoading && !errorMessage && currentCase">
+
+    <div class="viewer-section">
+
+      <!-- ── Viewer Toolbar ─────────────────────────────── -->
+      <div class="viewer-toolbar">
+
+        <!-- Navigation group -->
+        <div class="toolbar-group">
+          <!-- Previous series -->
+          <button class="tool-btn" data-tooltip="Previous Series" (click)="viewer.previousSeries()">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <!-- Next series -->
+          <button class="tool-btn" data-tooltip="Next Series" (click)="viewer.nextSeries()">
+            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <!-- Pointer / selection -->
+        <div class="toolbar-group">
+          <button
+            class="tool-btn"
+            data-tooltip="Select (S)"
+            [class.active]="viewer.activeTool === 'select'"
+            (click)="viewer.setTool('select')"
+          >
+            <!-- Arrow / pointer -->
+            <svg viewBox="0 0 24 24"><path d="M5 3l14 9-7 1-4 7z"/></svg>
+          </button>
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <!-- Zoom / Pan -->
+        <div class="toolbar-group">
+          <button
+            class="tool-btn"
+            data-tooltip="Zoom (Z)"
+            [class.active]="viewer.activeTool === 'zoom'"
+            (click)="viewer.setTool('zoom')"
+          >
+            <!-- Magnifier -->
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+          </button>
+
+          <button class="tool-btn" data-tooltip="Zoom In (+)" (click)="viewer.zoomIn()">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+          </button>
+
+          <button class="tool-btn" data-tooltip="Zoom Out (-)" (click)="viewer.zoomOut()">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+          </button>
+
+          <button
+            class="tool-btn"
+            data-tooltip="Pan (P)"
+            [class.active]="viewer.activeTool === 'pan'"
+            (click)="viewer.setTool('pan')"
+          >
+            <!-- Hand / pan -->
+            <svg viewBox="0 0 24 24"><path d="M18 11V7a2 2 0 0 0-4 0v1a2 2 0 0 0-4 0V4a2 2 0 0 0-4 0v8l-1.4-1.4A2 2 0 0 0 2 13v1a10 10 0 0 0 20 0v-3a1 1 0 0 0-1-1h-3z"/></svg>
+          </button>
+
+          <button class="tool-btn" data-tooltip="Fit to View (F)" (click)="viewer.fitToView()">
+            <!-- Maximize / fit -->
+            <svg viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+          </button>
+
+          <button class="tool-btn" data-tooltip="Reset View (R)" (click)="viewer.resetView()">
+            <!-- Rotate/reset -->
+            <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          </button>
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <!-- Window / Level -->
+        <div class="toolbar-group">
+          <button
+            class="tool-btn"
+            data-tooltip="Window / Level (W)"
+            [class.active]="viewer.activeTool === 'wl'"
+            (click)="viewer.setTool('wl')"
+          >
+            <!-- Sun / brightness -->
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          </button>
+
+          <!-- WL Presets -->
+          <button
+            class="preset-btn"
+            data-tooltip="Lung Window"
+            [class.active]="viewer.activePreset === 'lung'"
+            (click)="viewer.applyPreset('lung')"
+          >LUNG</button>
+
+          <button
+            class="preset-btn"
+            data-tooltip="Bone Window"
+            [class.active]="viewer.activePreset === 'bone'"
+            (click)="viewer.applyPreset('bone')"
+          >BONE</button>
+
+          <button
+            class="preset-btn"
+            data-tooltip="Soft Tissue Window"
+            [class.active]="viewer.activePreset === 'soft'"
+            (click)="viewer.applyPreset('soft')"
+          >SOFT</button>
+
+          <button
+            class="preset-btn"
+            data-tooltip="Brain Window"
+            [class.active]="viewer.activePreset === 'brain'"
+            (click)="viewer.applyPreset('brain')"
+          >BRAIN</button>
+
+          <button
+            class="preset-btn"
+            data-tooltip="Abdomen Window"
+            [class.active]="viewer.activePreset === 'abdomen'"
+            (click)="viewer.applyPreset('abdomen')"
+          >ABD</button>
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <!-- Measurement tools -->
+        <div class="toolbar-group">
+          <!-- Linear measurement -->
+          <button
+            class="tool-btn"
+            data-tooltip="Linear Measure (L)"
+            [class.active]="viewer.activeTool === 'ruler'"
+            (click)="viewer.setTool('ruler')"
+          >
+            <svg viewBox="0 0 24 24"><path d="M3 20 L20 3"/><path d="M7.5 16 L7.5 20"/><path d="M11.5 12 L11.5 16"/><path d="M15.5 8 L15.5 12"/><line x1="3" y1="20" x2="20" y2="3" stroke-width="1.2"/></svg>
+          </button>
+
+          <!-- Angle measurement -->
+          <button
+            class="tool-btn"
+            data-tooltip="Angle Measure (A)"
+            [class.active]="viewer.activeTool === 'angle'"
+            (click)="viewer.setTool('angle')"
+          >
+            <svg viewBox="0 0 24 24"><path d="M3 20 L12 5 L21 20"/><path d="M7 20 a5 5 0 0 1 4.5-5.5"/></svg>
+          </button>
+
+          <!-- Elliptical ROI -->
+          <button
+            class="tool-btn"
+            data-tooltip="Elliptical ROI (E)"
+            [class.active]="viewer.activeTool === 'roi-ellipse'"
+            (click)="viewer.setTool('roi-ellipse')"
+          >
+            <svg viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="9" ry="6"/></svg>
+          </button>
+
+          <!-- Rectangular ROI -->
+          <button
+            class="tool-btn"
+            data-tooltip="Rectangular ROI"
+            [class.active]="viewer.activeTool === 'roi-rect'"
+            (click)="viewer.setTool('roi-rect')"
+          >
+            <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="1"/></svg>
+          </button>
+
+          <!-- Freehand ROI -->
+          <button
+            class="tool-btn"
+            data-tooltip="Freehand ROI"
+            [class.active]="viewer.activeTool === 'roi-free'"
+            (click)="viewer.setTool('roi-free')"
+          >
+            <svg viewBox="0 0 24 24"><path d="M3 17 C5 10 8 5 12 5 C16 5 18 9 19 13 C20 17 17 20 13 20 C9 20 5 20 3 17 Z"/></svg>
+          </button>
+
+          <!-- Cobb angle -->
+          <button
+            class="tool-btn"
+            data-tooltip="Cobb Angle"
+            [class.active]="viewer.activeTool === 'cobb'"
+            (click)="viewer.setTool('cobb')"
+          >
+            <svg viewBox="0 0 24 24"><line x1="4" y1="8" x2="20" y2="10"/><line x1="4" y1="16" x2="20" y2="12"/><path d="M11 10 a4 4 0 0 0 0 2.5" stroke-dasharray="2 1"/></svg>
+          </button>
+
+          <!-- Probe / HU measurement -->
+          <button
+            class="tool-btn"
+            data-tooltip="HU Probe"
+            [class.active]="viewer.activeTool === 'probe'"
+            (click)="viewer.setTool('probe')"
+          >
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><line x1="12" y1="2" x2="12" y2="10"/><line x1="12" y1="14" x2="12" y2="22"/><line x1="2" y1="12" x2="10" y2="12"/><line x1="14" y1="12" x2="22" y2="12"/></svg>
+          </button>
+
+          <!-- Clear annotations -->
+          <button
+            class="tool-btn"
+            data-tooltip="Clear Annotations"
+            (click)="viewer.clearAnnotations()"
+          >
+            <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+          </button>
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <!-- Annotation / markup -->
+        <div class="toolbar-group">
+          <!-- Arrow annotation -->
+          <button
+            class="tool-btn"
+            data-tooltip="Arrow Annotation"
+            [class.active]="viewer.activeTool === 'arrow'"
+            (click)="viewer.setTool('arrow')"
+          >
+            <svg viewBox="0 0 24 24"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="9 5 19 5 19 15"/></svg>
+          </button>
+
+          <!-- Text label -->
+          <button
+            class="tool-btn"
+            data-tooltip="Text Label"
+            [class.active]="viewer.activeTool === 'label'"
+            (click)="viewer.setTool('label')"
+          >
+            <svg viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+          </button>
+
+          <!-- Hide / show annotations -->
+          <button
+            class="tool-btn"
+            data-tooltip="Toggle Annotations"
+            [class.active]="!viewer.annotationsVisible"
+            (click)="viewer.toggleAnnotations()"
+          >
+            <svg viewBox="0 0 24 24" *ngIf="viewer.annotationsVisible"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg viewBox="0 0 24 24" *ngIf="!viewer.annotationsVisible"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <!-- Orientation / flip / rotate -->
+        <div class="toolbar-group">
+          <button class="tool-btn" data-tooltip="Flip Horizontal" (click)="viewer.flipHorizontal()">
+            <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3"/><path d="M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3"/><line x1="12" y1="20" x2="12" y2="4"/></svg>
+          </button>
+
+          <button class="tool-btn" data-tooltip="Flip Vertical" (click)="viewer.flipVertical()">
+            <svg viewBox="0 0 24 24"><path d="M21 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v3"/><path d="M21 16v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3"/><line x1="4" y1="12" x2="20" y2="12"/></svg>
+          </button>
+
+          <button class="tool-btn" data-tooltip="Rotate CW 90°" (click)="viewer.rotateCW()">
+            <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+          </button>
+
+          <button class="tool-btn" data-tooltip="Rotate CCW 90°" (click)="viewer.rotateCCW()">
+            <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          </button>
+
+          <button class="tool-btn" data-tooltip="Invert Colors (I)" [class.active]="viewer.inverted" (click)="viewer.toggleInvert()">
+            <!-- Circle half -->
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18" fill="none"/><path d="M12 3a9 9 0 0 1 0 18Z" fill="currentColor" stroke="none"/></svg>
+          </button>
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <!-- Overlay / display toggles -->
+        <div class="toolbar-group">
+          <button
+            class="tool-btn"
+            data-tooltip="Toggle Overlay Info"
+            [class.active]="viewer.overlayVisible"
+            (click)="viewer.toggleOverlay()"
+          >
+            <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </button>
+
+          <button
+            class="tool-btn"
+            data-tooltip="Scout / Reference Lines"
+            [class.active]="viewer.referenceLines"
+            (click)="viewer.toggleReferenceLines()"
+          >
+            <svg viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+
+          <button
+            class="tool-btn"
+            data-tooltip="Fullscreen (F11)"
+            (click)="viewer.toggleFullscreen()"
+          >
+            <svg viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+          </button>
+        </div>
+
+        <!-- Right-aligned: W/L readout + zoom -->
+        <div class="zoom-display">
+          <div class="wl-display" *ngIf="viewer.activeTool === 'wl' || viewer.activePreset">
+            <span class="wl-item">W: <span>{{ viewer.windowWidth }}</span></span>
+            <span class="wl-item" style="margin-left:4px">L: <span>{{ viewer.windowLevel }}</span></span>
+          </div>
+          <span class="zoom-label">ZOOM</span>
+          <span class="zoom-value">{{ viewer.zoomPercent }}%</span>
+        </div>
+
+      </div>
+      <!-- ── End Viewer Toolbar ─────────────────────────── -->
+
+      <!-- Viewer body -->
+      <div class="viewer-body">
+
+        <!-- Modality sidebar -->
+        <div class="modality-sidebar">
+          <div
+            class="modality-box"
+            *ngFor="let mod of modalities"
+            [class.active]="selectedModality?.id === mod.id"
+            (click)="selectModality(mod)"
+          >
+            <img [src]="mod.imageUrl" alt="{{ mod.series }}" class="modality-thumbnail" />
+            <span class="modality-label">{{ mod.series }}</span>
+          </div>
+        </div>
+
+        <!-- Image viewer -->
+        <div
+          class="image-container"
+          *ngIf="selectedModality"
+          [class]="'image-container ' + viewer.cursorClass"
+          (mousedown)="viewer.onMouseDown($event)"
+          (mousemove)="viewer.onMouseMove($event)"
+          (mouseup)="viewer.onMouseUp($event)"
+          (wheel)="viewer.onWheel($event)"
+        >
+          <div class="scan-info-overlay" *ngIf="viewer.overlayVisible">
+            <p>PATIENT: {{ currentCase.patientName }}</p>
+            <p>STUDY: {{ selectedModality.description }}</p>
+            <p>DOB: {{ currentCase.patientDateOfBirth | date:'dd MMM yyyy' }}</p>
+            <p>STATUS: {{ currentCase.statusLabel }}</p>
+          </div>
+
+          <div
+            class="image-transform-wrapper"
+            [style.transform]="viewer.transformStyle"
+            [style.filter]="viewer.filterStyle"
+          >
+            <img
+              [src]="selectedModality.imageUrl"
+              alt="Patient Scan"
+              class="medical-image"
+              #scanImage
+            />
+            <canvas
+              class="annotation-canvas"
+              #annotationCanvas
+              [width]="scanImage.offsetWidth"
+              [height]="scanImage.offsetHeight"
+            ></canvas>
+          </div>
+
+          <!-- Measurement readouts -->
+          <div class="measurements-overlay" *ngIf="viewer.measurements.length > 0">
+            <div
+              class="measurement-item"
+              *ngFor="let m of viewer.measurements"
+            >{{ m }}</div>
+          </div>
+
+        </div>
+
+      </div>
+      <!-- ── End Viewer Body ─────────────────────────────── -->
+
+    </div>
+
+    <!-- ── Report Section ──────────────────────────────── -->
+    <div class="report-section">
+      <div class="report-content">
+
+        <div class="case-header">
+          <h2>Case #{{ currentCase.id.substring(0, 7).toUpperCase() }}</h2>
+          <p>DIAGNOSTIC REPORT</p>
+        </div>
+
+        <!-- Clinical History -->
+        <div class="history-panel">
+          <h3 class="section-title">
+            <span class="icon">📋</span> CLINICAL HISTORY
+          </h3>
+          <textarea
+            class="report-textarea report-textarea--sm"
+            [(ngModel)]="report.clinicalHistory"
+            placeholder="Clinical history...">
+          </textarea>
+        </div>
+
+        <!-- Technique -->
+        <div class="write-report-panel">
+          <h3 class="section-title">
+            <span class="icon">⚙️</span> TECHNIQUE
+          </h3>
+          <textarea
+            class="report-textarea report-textarea--sm"
+            [(ngModel)]="report.technique"
+            placeholder="Describe the imaging technique used...">
+          </textarea>
+        </div>
+
+        <!-- Findings -->
+        <div class="write-report-panel">
+          <h3 class="section-title">
+            <span class="icon">👁️</span> FINDINGS
+          </h3>
+          <textarea
+            class="report-textarea"
+            [(ngModel)]="report.findings"
+            placeholder="Describe your findings...">
+          </textarea>
+        </div>
+
+        <!-- Impression -->
+        <div class="write-report-panel">
+          <h3 class="section-title">
+            <span class="icon">🧠</span> IMPRESSION
+          </h3>
+          <textarea
+            class="report-textarea"
+            [(ngModel)]="report.impression"
+            placeholder="Your diagnostic impression...">
+          </textarea>
+        </div>
+
+        <!-- Recommendation -->
+        <div class="write-report-panel">
+          <h3 class="section-title">
+            <span class="icon">📝</span> RECOMMENDATION
+          </h3>
+          <textarea
+            class="report-textarea report-textarea--sm"
+            [(ngModel)]="report.recommendation"
+            placeholder="Follow-up or treatment recommendations...">
+          </textarea>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions-panel">
+          <div class="draft-saved-msg" *ngIf="draftSaved">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Draft saved successfully
+          </div>
+          <div class="action-buttons">
+            <button class="btn-secondary" (click)="saveDraft()">SAVE DRAFT</button>
+            <button
+              class="btn-primary"
+              (click)="submitReport()"
+              [disabled]="isSubmitting"
+            >
+              {{ isSubmitting ? 'SUBMITTING...' : 'FINALIZE REPORT' }}
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
