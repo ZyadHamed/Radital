@@ -21,7 +21,7 @@
 
 - [The Problem](#-the-problem)
 - [The Solution](#-the-solution)
-- [Live Demo](#-live-demo)
+- [Video Demo](#-video-demo)
 - [Screenshots](#-screenshots)
 - [Architecture](#️-architecture)
 - [Software Engineering Process](#-software-engineering-process)
@@ -71,11 +71,13 @@ Track real-time status  ←←←  Finalize & notify     ←←←  Submit repor
 
 ---
 
-## 🎬 Live Demo
+## 🎬 Video Demo
+### Normal Imaging Request:
+https://github.com/user-attachments/assets/521a3670-4c49-4610-b623-ee14f160783e
 
-> **📹 Demo Video:** [Watch Full Platform Walkthrough](#) *(add your video link here)*
+### Emergency Request:
+https://github.com/user-attachments/assets/70625a70-fdb5-48cc-b51d-eda33d3c0ff5
 
-> **🌐 Live Preview:** [radital.app](#) *(add your deployment link here)*
 
 ---
 
@@ -478,7 +480,7 @@ Where weights w₁, w₂, w₃ are configurable by administrators and must sum t
 
 ---
 
-## 🗓️ Release Plan
+## Release Plan
 
 ```
 RELEASE 1 — FOUNDATION          Sprints 1–2 (Weeks 1–4)        47 SP
