@@ -286,10 +286,10 @@ Requirements are structured across four levels:
 ## 🛠️ Technical Stack
 
 ```
-Frontend         React.js SPA, WebSocket client, DICOMweb viewer
+Frontend         Angular, WebSocket client, DICOMweb viewer
 API Gateway      JWT validation, RBAC enforcement, TLS termination, rate limiting
-Backend          Microservices (Node.js / REST APIs)
-Database         PostgreSQL (structured data + audit logs)
+Backend          Microservices (ASP.Net Core / REST APIs)
+Database         MySQL + EFCore Code First Approach (structured data + audit logs)
 Cache            Redis (Match Score cache, queue state)
 File Storage     AWS S3 + PACS integration (DICOM files, pre-signed URLs)
 Encryption       AES-256 at rest, TLS 1.3 in transit, dedicated KMS
